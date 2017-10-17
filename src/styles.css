@@ -1,0 +1,6 @@
+/* You can add global styles to this file, and also import other style files */
+@import "./app/elements/directives.css";
+
+.main{
+  margin: 50px 50px;
+}

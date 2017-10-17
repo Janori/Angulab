@@ -1,0 +1,10 @@
+.jcolumn > i {
+  margin-right: 10px;
+  transition: 0.5s;
+}
+.jcolumn:hover{
+  cursor: pointer;
+}
+.jcolumn:hover i{
+  transform: rotateZ(180deg);
+}

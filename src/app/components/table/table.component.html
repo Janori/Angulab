@@ -1,0 +1,45 @@
+
+<button (click)="tb.query()" type="button" class="btn btn-info">Enviar</button>
+<button (click)="showMore()" type="button" class="btn btn-info">Enviar</button>
+
+<app-paginator1 [table]="tb"
+                [showResults]="5">
+</app-paginator1>
+
+<input type="text" #txtSearch [(ngModel)]="text" (ngModelChange)="textChanged($event)">
+
+<select (change)="changed($event.target.value)" class="custom-select">
+  <option *ngFor="let value of values" [value]="value">
+    {{ value }}
+  </option>
+</select>
+
+<table #tbMember appJtable class="table"
+       [resultsPerPage]="20"
+       [service]="membersService">
+  <thead>
+    <tr>
+      <th appJcolumn
+          [name]="'id'">
+          #
+      </th>
+      <th>
+        <i class="fa fa-chevron-down"></i>
+        First Name
+      </th>
+      <th appJcolumn
+          [name]="'lname'">
+          Lastname
+      </th>
+      <th>Username</th>
+    </tr>
+  </thead>
+  <tbody *ngIf="tb.data != undefined">
+    <tr *ngFor="let row of tb.data">
+      <th scope="row">{{ row.id }}</th>
+      <td>{{ row.nombre }}</td>
+      <td>{{ row.tipo }}</td>
+      <td>{{ row.info.code }}</td>
+    </tr>
+  </tbody>
+</table>
