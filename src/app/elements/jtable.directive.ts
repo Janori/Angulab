@@ -4,6 +4,8 @@ import { Directive, HostListener, HostBinding, QueryList,
 import { ActivatedRoute } from '@angular/router';
 import { JcolumnDirective } from './jcolumn.directive';
 import { IService } from '../services/iservice';
+import { Subject } from 'rxjs/Subject';
+import 'rxjs/add/operator/debounceTime';
 
 @Directive({
   selector: '[appJtable]'
@@ -12,7 +14,7 @@ export class JtableDirective implements AfterContentInit{
   @ContentChildren(JcolumnDirective) columns:QueryList<JcolumnDirective>;
 
   @Input('data')
-  @Output('data') public data:any;
+  @Output('data') public data:any[] = [];
 
   @Input('resultsPerPage')
   public set resultsPerPage(count:number){
@@ -42,26 +44,53 @@ export class JtableDirective implements AfterContentInit{
     return this.params.currentPage();
   }
 
+  private lastWord = '';
+
+
+
   @Input('query') public query(word:string = null){
+    this.textChanged.next(word);
+  }
+
+  private _query(word:string = null){
     if(word && word.replace(' ', '') == '') this.params.word = null;
     else if(word) this.params.word = word;
+    console.log(`w: ${word} l: ${this.lastWord}`);
+    if(word != this.lastWord && word != null){
+       this.params.from = 0;
+     }
     //console.log(this.params.getQueryParams());
-    console.log(this.params.count);
     this.serv.getData(this.params.getQueryParams()).subscribe(res=>{
       let rc = res.headers.get('rowcount');
-      if(rc != NaN){
-        this.params.total = parseInt(rc);
+      console.log(rc);
+      if(rc != NaN && rc != 0){
+          this.params.total = parseInt(rc);
       }
-      this.data = res.json().data;
+      if(res.json().status){
+        this.data = res.json().data;
+      }else{
+        console.log('D: ' + res.json().data + ' Msg: ' + res.json().msg);
+      }
     });
+    this.lastWord = word;
   }
 
   private params = new QueryParams();
   private currentUrl = '';
 
+
+  textChanged: Subject<string> = new Subject<string>();
+
   constructor(private renderer2:Renderer2,
               private elementRef:ElementRef,
-              private aRoute:ActivatedRoute) { }
+              private aRoute:ActivatedRoute) {
+      this.textChanged
+          .debounceTime(300) // wait 300ms after the last event before emitting last event
+          .distinctUntilChanged() // only emit if value is different from previous value
+          .subscribe(model =>{
+              this._query(model);
+          });
+  }
 
   ngOnInit(){
     this.currentUrl = this.aRoute.pathFromRoot.join();
@@ -69,15 +98,16 @@ export class JtableDirective implements AfterContentInit{
       let from = p['from'] || 0;
       let count = p['count'] || this.params.count;
       let word = p['word'] || null;
-      let order = p['orderby'] || [];
-
+      let order = p['orderby'] || null;
       this.params.from = from;
       this.params.count = count;
       this.params.word = word;
-      for(let o of order){
-        this.params.addOrder(o);
+      if(order){
+        for(let o of order.split(',')){
+          this.params.addOrder(o);
+        }
       }
-      this.query();
+      this._query(word);
     }, error=>{
 
       console.log("errorsin");
@@ -86,12 +116,20 @@ export class JtableDirective implements AfterContentInit{
 
   ngAfterContentInit(){
     this.columns.forEach(col=>{
+      for(let o of this.params.getOrders()){
+        if(col.name == o){
+          col.setOrder(false);
+          //col.order = true;
+        }
+      }
       col.orderChanged.subscribe(event=>{
         if(event.order == ""){
           this.params.removeOrder(event.name);
         }else{
           this.params.addOrder(event.name);
         }
+        this.params.from = 0;
+        this._query();
       });
     })
   }
@@ -114,9 +152,14 @@ class QueryParams{
     this.specialWords = this.specialWords.filter(x=>{ x.key != key});
   }
 
+  getOrders() : string[]{
+    return this.orders;
+  }
+
   // *** Order By's ***
   addOrder(key:string){
-    this.orders.push(key);
+    if(this.orders.find(x=>{ return x == key}) == null)
+      this.orders.push(key);
   }
   removeOrder(key:string){
     this.orders = this.orders.filter(x=>{ return x !== key});
@@ -129,11 +172,6 @@ class QueryParams{
     if(this.word) query.word = this.word;
     if(this.orders.length > 0) query.orderby = this.orders.join(',');
     return query;
-    /*var word = `?from=${this.from}&count=${this.count}`;
-    if(this.word) word += `&word=${this.word}`;
-    if(this.orders.length > 0)
-      word += `&orderby=${this.orders.join(',')}`
-    return word;*/
   }
 
   getQueryParams() : any{
@@ -180,6 +218,9 @@ class QueryParams{
       _fromValue = current - 1 - _pivot;
     }
 
+
+    //console.log(`Cur:${current} Piv:${_pivot} From:${_fromValue} To:${_toValue} Tot:${this.totalPages()}`);
+
     for(let i=_fromValue;i<_toValue;i++){
       values.push(i+1);
     }
@@ -192,6 +233,7 @@ class QueryParams{
   }
 
   totalPages() : number{
+    //console.log(`Total: ${this.total} Count: ${this.count}`);
     return Math.ceil(this.total/this.count);
   }
 

@@ -11,6 +11,10 @@ export class JcolumnDirective {
   @Output() public orderChanged : EventEmitter<IColumnEvent> = new EventEmitter();
 
   @Output('order') public order:boolean = true;
+  @Input('order') public setOrder(order:boolean){
+    this.order = order;
+    this.showOrderBy();
+  }
   //private header:string = '-';
 
   //@HostBinding('style.background') private background = '#fff';
@@ -46,22 +50,25 @@ export class JcolumnDirective {
     }
 
     this.order = !this.order;
-    if(this.order){ //ASC
-      this.renderer2.removeClass(this.arrow, 'fa-chevron-down');
-      this.renderer2.addClass(this.arrow, 'fa-chevron-up');
-      this.orderChanged.emit(cev);
-    }else{ //DESC
-      this.renderer2.removeClass(this.arrow, 'fa-chevron-up');
-      this.renderer2.addClass(this.arrow, 'fa-chevron-down');
-      cev.order = 'desc';
-      this.orderChanged.emit(cev);
-    }
+    if(!this.order) cev.order = 'desc';
+    this.orderChanged.emit(cev);
+    this.showOrderBy();
   }
 
   @HostListener('mouseleave', ['$event']) public mouseLeave(evt){
     evt.preventDefault();
     evt.stopPropagation();
 
+  }
+
+  private showOrderBy(){
+    if(this.order){ //ASC
+      this.renderer2.removeClass(this.arrow, 'fa-chevron-down');
+      this.renderer2.addClass(this.arrow, 'fa-chevron-up');
+    }else{ //DESC
+      this.renderer2.removeClass(this.arrow, 'fa-chevron-up');
+      this.renderer2.addClass(this.arrow, 'fa-chevron-down');
+    }
   }
 
 }

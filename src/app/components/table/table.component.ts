@@ -3,8 +3,7 @@ import { MembersService } from '../../services/members.service';
 import { Service } from '../../services/service';
 import { JtableDirective } from '../../elements/jtable.directive';
 import { NgModel } from '@angular/forms';
-import { Subject } from 'rxjs/Subject';
-import 'rxjs/add/operator/debounceTime';
+import { CSVExport } from "../../misc/exportable/export.csv";
 
 @Component({
   selector: 'app-table',
@@ -19,21 +18,19 @@ export class TableComponent implements OnInit {
   text:string = "";
 
   textChanged(e){
-    this.modelChanged.next(e);
-    //this.tb.query(e);
+    this.tb.query(e);
   }
 
 
   model: string;
-  modelChanged: Subject<string> = new Subject<string>();
 
   constructor(private membersService:MembersService) {
-    this.modelChanged
-        .debounceTime(300) // wait 300ms after the last event before emitting last event
-        .distinctUntilChanged() // only emit if value is different from previous value
-        .subscribe(model =>{
-            this.tb.query(model);
-        });
+  }
+
+  export(){
+    let csv = new CSVExport(this.tb.data);
+
+
   }
 
   showMore(){

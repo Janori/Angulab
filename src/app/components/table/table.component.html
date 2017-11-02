@@ -3,8 +3,10 @@
 <button (click)="showMore()" type="button" class="btn btn-info">Enviar</button>
 
 <app-paginator1 [table]="tb"
-                [showResults]="5">
+                [showResults]="10">
 </app-paginator1>
+
+<input type="button" (click)="export()" role="button" value="xD">
 
 <input type="text" #txtSearch [(ngModel)]="text" (ngModelChange)="textChanged($event)">
 
@@ -24,7 +26,6 @@
           #
       </th>
       <th>
-        <i class="fa fa-chevron-down"></i>
         First Name
       </th>
       <th appJcolumn
@@ -34,7 +35,7 @@
       <th>Username</th>
     </tr>
   </thead>
-  <tbody *ngIf="tb.data != undefined">
+  <tbody *ngIf="tb != undefined">
     <tr *ngFor="let row of tb.data">
       <th scope="row">{{ row.id }}</th>
       <td>{{ row.nombre }}</td>
