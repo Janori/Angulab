@@ -9,11 +9,20 @@ export class CSVExport{
     decimalSeparator: '.',
     showLabels: true,
     showTitle: true,
-    headers:["id", "nombre", "tipo", "info.code", "assoc", "father"]
+    headers:[],
+
+    setHeaders(options:CSVExportOptions){
+      if(options.fieldSeparator) this.options.fieldSeparator = options.fieldSeparator;
+      if(options.quoteStrings) this.options.quoteStrings = options.quoteStrings;
+      if(options.decimalSeparator) this.options.decimalSeparator = options.decimalSeparator;
+      if(options.showLabels) this.options.showLabels = options.showLabels;
+      if(options.showTitle) this.options.showTitle = options.showTitle;
+      if(options.headers) this.options.headers = options.headers;
+    }
   }
 
   constructor(data:any = [], options:CSVExportOptions = null){
-    if(options) this.options = options;
+    if(options) this.options.setHeaders(options);
     if(data){
       this.data = data;
       this.exportData();
@@ -27,7 +36,7 @@ export class CSVExport{
                          Object.getOwnPropertyNames(this.data[0]) :
                          this.options.headers ;
     console.log(props);
-    var csvText = this.options.headers.join(',') + n;
+    var csvText = this.options.headers.join(this.options.fieldSeparator) + n;
     for(let row of this.data){
       var txtRow = [];
       for(let p of props){
@@ -62,7 +71,8 @@ export class CSVExport{
       }
       csvText += txtRow.join(',') + n;
     }
-    console.log(csvText);
+
+    //console.log(csvText);
 
     /*var blob = new Blob([csvText], { type:"text/csv;charset=utf-8;" });
     var e = document.createEvent('MouseEvents');
@@ -79,10 +89,12 @@ export class CSVExport{
 }
 
 export interface CSVExportOptions{
-  fieldSeparator:string,
-  quoteStrings:string,
-  decimalSeparator:string,
-  showLabels:boolean,
-  showTitle:boolean,
-  headers: string[]
+  fieldSeparator?:string,
+  quoteStrings?:string,
+  decimalSeparator?:string,
+  showLabels?:boolean,
+  showTitle?:boolean,
+  headers?: string[]
+
+  setHeaders?(options:CSVExportOptions);
 }

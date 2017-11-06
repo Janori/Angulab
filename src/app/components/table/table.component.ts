@@ -28,7 +28,9 @@ export class TableComponent implements OnInit {
   }
 
   export(){
-    let csv = new CSVExport(this.tb.data);
+    let csv = new CSVExport(this.tb.data, {
+      headers:["id", "nombre", "tipo", "info.code", "assoc", "father"]
+    });
 
 
   }
